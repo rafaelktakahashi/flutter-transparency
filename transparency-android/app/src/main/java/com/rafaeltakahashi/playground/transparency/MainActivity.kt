@@ -1,6 +1,5 @@
 package com.rafaeltakahashi.playground.transparency
 
-import android.app.ActivityOptions
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -23,15 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
-import com.rafaeltakahashi.playground.transparency.activity.ModalFlutterActivity
-import com.rafaeltakahashi.playground.transparency.ui.theme.PrimaryPurple
+import com.rafaeltakahashi.playground.transparency.activity.CustomFlutterActivity
 import com.rafaeltakahashi.playground.transparency.ui.theme.RegularTheme
-import io.flutter.embedding.android.FlutterActivity
-import io.flutter.embedding.android.FlutterActivityLaunchConfigs
 import io.flutter.embedding.engine.FlutterEngineCache
+import io.flutter.plugin.common.MethodChannel
 
 /// Icon from FlatIcons: https://www.flaticon.com/free-icons/halloween-party
 
@@ -39,23 +34,26 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Content(openFlutter = { openFlutter() })
+            Content(openFlutter = {s -> openFlutter(s)})
         }
     }
 
-    private fun openFlutter() {
+    private fun openFlutter(pageName: String) {
+        // Don't use this navigation as an example. Prefer using an interop navigator.
+        val engine = FlutterEngineCache.getInstance().get("engine")
+        MethodChannel(engine!!.dartExecutor.binaryMessenger, "method-channel").invokeMethod("navigate", pageName)
+
         // Create the intent with transparent background mode.
         // Aside from this, the theme (in the themes xml) also needs to be transparent, and the
         // Flutter code also needs a transparent page builder.
-        val intent = Intent(this, ModalFlutterActivity::class.java)
+        val intent = Intent(this, CustomFlutterActivity::class.java)
         startActivity(intent)
     }
 }
 
 @Composable
-fun Content(openFlutter: () -> Unit) {
+fun Content(openFlutter: (String) -> Unit) {
     RegularTheme {
-        // A surface container using the 'background' color from the theme
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.primary
@@ -73,9 +71,14 @@ fun Content(openFlutter: () -> Unit) {
                         .background(color = Color.White)
                 )
                 Button(onClick = {
-                    openFlutter()
+                    openFlutter("modal")
                 }) {
-                    Text(text = "Open!")
+                    Text(text = "Open Modal")
+                }
+                Button(onClick = {
+                    openFlutter("card")
+                }) {
+                    Text(text = "Open Card")
                 }
             }
         }

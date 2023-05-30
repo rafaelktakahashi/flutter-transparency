@@ -30,8 +30,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      // Set this to false if you don't want to see the "debug" ribbon.
+      // I find this useful to tell where the top of the Flutter activity/view is.
+      debugShowCheckedModeBanner: true,
       theme: ThemeData(
-        primarySwatch: _createMaterialColor(const Color(0xFF7D5260)),
+        // I used 0xFF7D5260 before (the purple color that appears in the main
+        // native pages) but that's extremely ugly.
+        primarySwatch: _createMaterialColor(Colors.lightBlue),
       ),
       // It's important to actually follow the route (in Flutter) so that the
       // PageRouteBuilder's code runs. If you set your modal page as the initial
@@ -83,6 +88,7 @@ class MyHomePage extends StatelessWidget {
     // A fully transparent page to render at the bottom.
     return Scaffold(
       appBar: null,
+      backgroundColor: Colors.transparent,
       body: Container(color: Colors.transparent),
     );
   }

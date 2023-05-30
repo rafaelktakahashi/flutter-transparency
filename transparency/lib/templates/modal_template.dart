@@ -57,8 +57,8 @@ class ModalTemplate extends StatelessWidget {
               // bottom, round only the top corners.
               borderRadius: mode == ModalTemplateMode.bottomCard
                   ? const BorderRadius.only(
-                      topLeft: Radius.circular(15),
-                      topRight: Radius.circular(15),
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
                     )
                   : BorderRadius.circular(15),
               // This is a blurred container. It doesn't really have to
@@ -74,16 +74,12 @@ class ModalTemplate extends StatelessWidget {
                   child: Scaffold(
                     appBar: AppBar(
                       title: Text(title),
-                      systemOverlayStyle: const SystemUiOverlayStyle(
-                        statusBarColor: Colors.transparent,
-                        systemNavigationBarContrastEnforced: false,
-                      ),
                     ),
                     // In the case of rendering the content at the bottom of the
                     // page, this ensures that the card's content doesn't render
                     // behind the navigation bar. If rendering the card at the
                     // centering this has no effect anyway.
-                    body: SafeArea(child: child),
+                    body: child,
                   ),
                 ),
               ),
@@ -131,14 +127,18 @@ class CustomConstrainingBox extends StatelessWidget {
           ),
         );
       case ModalTemplateMode.bottomCard:
-        // No SafeArea in this case, because the card wants to render behind
-        // other things. The rest of the template needs to provide a safe area
-        // for the card's content.
-        return FractionallySizedBox(
-          alignment: FractionalOffset.bottomCenter,
-          widthFactor: 1,
-          heightFactor: 0.4,
-          child: child,
+        // Do not avoid bottom intrusions with the safe area, because the card
+        // needs to render behind the navigation bar.
+        // If I omit the SafeArea or use a SafeArea inside the Scaffold, the
+        // appbar renders too tall for some reason.
+        return SafeArea(
+          bottom: false,
+          child: FractionallySizedBox(
+            alignment: FractionalOffset.bottomCenter,
+            widthFactor: 1,
+            heightFactor: 0.4,
+            child: child,
+          ),
         );
     }
   }

@@ -27,25 +27,25 @@ class ViewController: UIViewController {
         let flutterEngine = (UIApplication.shared.delegate as! AppDelegate).flutterEngine
         let flutterViewController = FlutterViewController(engine: flutterEngine, nibName: nil, bundle: nil)
         
-        // Prefira usar um interop navigator. Esta navegação está improvisada.
+        // Prefer using an interop navigator. Don't copy this method channel code.
         let channel = FlutterMethodChannel(name: "method-channel", binaryMessenger: flutterViewController.binaryMessenger)
         channel.invokeMethod("navigate", arguments: pageName)
         
-        // Minhas observações sobre quais estilos funcionam para mostrar modais Flutter:
-        //
-        // .fullScreen - Não funciona, oculta a view atrás.
-        // .pageSheet - Funciona, encolhe a view atrás e mostra a view Flutter por cima. A view Flutter pode ser deslizada para baixo. Note que em iPads, a view atrás não encolhe e um pouco de espaço é deixado dos lados da tela Flutter.
-        // .formSheet - Funciona, igual ao .pageSheet mas deixa mais espaço nos lados em telas grandes.
-        // .currentContext - Não funciona; desliza um modal para cima, mas não mostra a view atrás.
-        // .custom - Funciona; sem usar configurações adicionais é idêntico ao .overFullScreen.
-        // .overFullScreen - Funciona, desliza a view Flutter por cima sem alterar a view atrás. O usuário não consegue deslizar a view Flutter como no .pageSheet, o pop precisa ocorrer manualmente pois o gesto de voltar uma página também não funciona (pois a página flutter desliza para cima). NOTE que o modal Flutter que está sendo usado aqui como exemplo tem seu próprio listener de toque que chama um pop() quando o usuário toca fora da janela. A view Flutter cobre o máximo de espaço possível na tela, usando uma cor transparente fora da janela.
-        // .overCurrentContext - Funciona, siilar ao .overFullScreen mas se a tela atual for um modal, a tela Flutter aparece dentro do modal ao invés de cobrir a tela toda. Não há diferença neste exemplo.
-        // .popover - Mesmo que o .formSheet no iOS 13, e mesmo que o .fullScreen no iOS 12.
-        // .blurOverFullScreen - Não use, disponível somente no tvOS 11+.
-        // .none - Não use, causa crash. Este valor não serve para mostrar views.
-        // .automatic (Somente iOS 13+) - Pode variar dependendo do view controller; aqui, é o mesmo que .pageSheet.
+        /// My observations about which styles work for showing Flutter modals:
+        ///
+        /// .fullScreen - Doesn't work, main view is unloaded.
+        /// .pageSheet - Works, shrinks the native view a bit and shows the Flutter view over it. The user can slide the Flutter view downward to dismiss it. Note that in iPads, the native view behind it doesn't shrink and some space is left on either side of the Flutter view.
+        /// .formSheet - Works, same as .pageSheet but renders in a smaller window in large screens.
+        /// .currentContext - Doesn't work; slides the Flutter view upward and the view behind it is unloaded.
+        /// .custom - Works; without further configs, it's the same as .overFullScreen.
+        /// .overFullScreen - Works, slides the Flutter view above without changing the native view. The user cannot slide the Flutter view as with .pageSheet, thus popping the view needs to be done manually since the back gesture doesn't work either (since the page slides upwards).
+        /// .overCurrentContext - Works, similar to .overFullScreen but renders inside the current view if it's a modal, rather than using the whole screen. There's no difference to .overFullScreen in this example.
+        /// .popover - Same as .formSheet in iOS 13, and same as .fullScreen in iOS 12.
+        /// .blurOverFullScreen - Do not use. Available only in tvOS 11+.
+        /// .none - Do not use, causes a crash. This is not meant to be used for showing views.
+        /// .automatic (iOS 13+ only) - May vary depending on the native controller; here, it does the same as .pageSheet.
         flutterViewController.modalPresentationStyle = .overFullScreen
-        // Pede para o Flutter criar uma view transparente.
+        /// Tells Flutter to allow transparency.
         flutterViewController.isViewOpaque = false
         
         present(flutterViewController, animated: true, completion: nil)

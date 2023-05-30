@@ -28,7 +28,8 @@ class CardPage extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _paragraph("Modal in a window that should be transparent."),
+              _paragraph("Card in a transparent page. "
+                  "The Flutter view/activity extends farther than the card, but everything aside from the card is transparent."),
               _paragraph(
                   "Tapping on the background calls SystemNavigator.pop()."),
               _paragraph("This must render in a transparent activity or view."),
