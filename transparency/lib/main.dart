@@ -1,10 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:transparency/pages/card_page.dart';
 import 'package:transparency/pages/modal_page.dart';
 
-void main() => runApp(const MyApp());
+void main() {
+  final navigatorKey = GlobalKey<NavigatorState>();
+
+  runApp(MyApp(
+    navigatorKey: navigatorKey,
+  ));
+
+  const channel = MethodChannel("method-channel");
+  channel.setMethodCallHandler((call) async {
+    if (call.method == "navigate") {
+      final pageName = call.arguments as String;
+      navigatorKey.currentState?.pushReplacementNamed(pageName);
+    }
+  });
+}
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  // This is a workaround. Do not copy.
+  final GlobalKey<NavigatorState> navigatorKey;
+
+  const MyApp({super.key, required this.navigatorKey});
 
   // This widget is the root of your application.
   @override
@@ -18,13 +37,27 @@ class MyApp extends StatelessWidget {
       // PageRouteBuilder's code runs. If you set your modal page as the initial
       // route in native code, you don't get a transparent background here.
       // Prefer using an interop navigator.
-      initialRoute: "modal",
+      initialRoute: "home",
+      navigatorKey: navigatorKey,
       onGenerateRoute: (routeSettings) {
         if (routeSettings.name == "modal") {
           return PageRouteBuilder(
             settings:
                 routeSettings, // Pass this to make popUntil(), pushNamedAndRemoveUntil(), work
             pageBuilder: (_, __, ___) => const ModalPage(),
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
+            barrierDismissible: true,
+            fullscreenDialog: true,
+            opaque: false,
+          );
+        } else if (routeSettings.name == "card") {
+          return PageRouteBuilder(
+            settings:
+                routeSettings, // Pass this to make popUntil(), pushNamedAndRemoveUntil(), work
+            pageBuilder: (_, __, ___) => const CardPage(),
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
             barrierDismissible: true,
             fullscreenDialog: true,
             opaque: false,
@@ -47,10 +80,10 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text("HOME PAGE"),
-      ),
+    // A fully transparent page to render at the bottom.
+    return Scaffold(
+      appBar: null,
+      body: Container(color: Colors.transparent),
     );
   }
 }

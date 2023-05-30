@@ -3,16 +3,20 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+enum ModalTemplateMode { centered, bottomCard }
+
 /// Template for a page that renders in a modal.
 /// Whatever page uses this template must be rendered in a transparent route.
 class ModalTemplate extends StatelessWidget {
   final String title;
   final Widget child;
+  final ModalTemplateMode mode;
 
   const ModalTemplate({
     super.key,
     required this.title,
     required this.child,
+    this.mode = ModalTemplateMode.centered,
   });
 
   @override
@@ -24,58 +28,62 @@ class ModalTemplate extends StatelessWidget {
         if (Navigator.of(context).canPop()) {
           Navigator.of(context).pop();
         } else {
-          SystemNavigator.pop();
+          // Animated is for iOS only.
+          SystemNavigator.pop(animated: true);
         }
       },
       // It seems I need a container with non-null color to make the gesture
       // work, but I don't know why. Maybe colorless containers let touches fall
       // through?
       child: Container(
+        // If you need to dim the background, this is not the place for it.
+        // Using a color here creates a sharp edge that may be fine if you're
+        // using a fade in/out transition, but is very visible when sliding.
+        // If this needs to render on top of a Flutter screen, you can add that
+        // logic in a custom transition; if it needs to render over a native
+        // screen, it's harder to know _how_ this modal will appear on screen,
+        // so it's safer to handle that natively too.
         color: Colors.transparent,
         width: double.infinity,
         height: double.infinity,
         // Don't let the modal overlap with the status bar.
-        child: SafeArea(
-          child: Center(
-            // Limit the modal's size (makes a difference in large screens).
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxHeight: 600,
-                maxWidth: 600,
-              ),
-              // Don't take up the whole screen, even on small devices.
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                // Override the gesture detector outside. This gesture doesn't
-                // need to do anything, it just has to disable the outer
-                // gesture detector.
-                child: GestureDetector(
-                  onTap: () {},
-                  // Round the modal's corners.
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(15),
-                    // This is a blurred container. It doesn't really have to
-                    // do with app functionality, it's just here to show that
-                    // this screen can be transparent if needed.
-                    child: TransparentContainer(
-                      // Override the child's scaffold color, because the
-                      // blurred container already applies the tint.
-                      child: Theme(
-                        data: Theme.of(context).copyWith(
-                          scaffoldBackgroundColor: Colors.transparent,
-                        ),
-                        child: Scaffold(
-                          appBar: AppBar(
-                            title: Text(title),
-                            systemOverlayStyle: const SystemUiOverlayStyle(
-                              statusBarColor: Colors.transparent,
-                              systemNavigationBarContrastEnforced: false,
-                            ),
-                          ),
-                          body: child,
-                        ),
+        child: CustomConstrainingBox(
+          mode: mode,
+          child: GestureDetector(
+            onTap: () {},
+            // Round the modal's corners.
+            child: ClipRRect(
+              // When centered, round all corners; when rendering at the
+              // bottom, round only the top corners.
+              borderRadius: mode == ModalTemplateMode.bottomCard
+                  ? const BorderRadius.only(
+                      topLeft: Radius.circular(15),
+                      topRight: Radius.circular(15),
+                    )
+                  : BorderRadius.circular(15),
+              // This is a blurred container. It doesn't really have to
+              // do with app functionality, it's just here to show that
+              // this screen can be transparent if needed.
+              child: TransparentContainer(
+                // Override the child's scaffold color, because the
+                // blurred container already applies the tint.
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    scaffoldBackgroundColor: Colors.transparent,
+                  ),
+                  child: Scaffold(
+                    appBar: AppBar(
+                      title: Text(title),
+                      systemOverlayStyle: const SystemUiOverlayStyle(
+                        statusBarColor: Colors.transparent,
+                        systemNavigationBarContrastEnforced: false,
                       ),
                     ),
+                    // In the case of rendering the content at the bottom of the
+                    // page, this ensures that the card's content doesn't render
+                    // behind the navigation bar. If rendering the card at the
+                    // centering this has no effect anyway.
+                    body: SafeArea(child: child),
                   ),
                 ),
               ),
@@ -84,6 +92,55 @@ class ModalTemplate extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// When the mode is centered, returns a centered box of fixed size. When the
+/// mode is bottomCard, returns a card at the bottom of the screen that occupies
+/// 40% of the total screen height.
+class CustomConstrainingBox extends StatelessWidget {
+  final ModalTemplateMode mode;
+  final Widget child;
+
+  const CustomConstrainingBox({
+    super.key,
+    required this.mode,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    switch (mode) {
+      case ModalTemplateMode.centered:
+        // Safe area outside of the content, to ensure that the modal won't
+        // render behind the status bar or the navigation bar.
+        return SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxHeight: 600,
+                maxWidth: 600,
+              ),
+              // Limit the modal's size to ensure that it always shows a bit of
+              // the previous page around the edges.
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: child,
+              ),
+            ),
+          ),
+        );
+      case ModalTemplateMode.bottomCard:
+        // No SafeArea in this case, because the card wants to render behind
+        // other things. The rest of the template needs to provide a safe area
+        // for the card's content.
+        return FractionallySizedBox(
+          alignment: FractionalOffset.bottomCenter,
+          widthFactor: 1,
+          heightFactor: 0.4,
+          child: child,
+        );
+    }
   }
 }
 

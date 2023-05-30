@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:transparency/templates/modal_template.dart';
 
-class ModalPage extends StatelessWidget {
-  const ModalPage({super.key});
+class CardPage extends StatelessWidget {
+  const CardPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,8 @@ class ModalPage extends StatelessWidget {
         return false;
       },
       child: ModalTemplate(
-        title: "Modal",
+        title: "Card",
+        mode: ModalTemplateMode.bottomCard,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
