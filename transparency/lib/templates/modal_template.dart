@@ -19,18 +19,22 @@ class ModalTemplate extends StatelessWidget {
     this.mode = ModalTemplateMode.centered,
   });
 
+  void back(BuildContext context) {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      // Animated is for iOS only.
+      SystemNavigator.pop(animated: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // This gesture detector covers the entire screen, and lets the user
     // dismiss the modal by touching outside of it.
     return GestureDetector(
       onTap: () {
-        if (Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        } else {
-          // Animated is for iOS only.
-          SystemNavigator.pop(animated: true);
-        }
+        back(context);
       },
       // It seems I need a container with non-null color to make the gesture
       // work, but I don't know why. Maybe colorless containers let touches fall
@@ -74,6 +78,19 @@ class ModalTemplate extends StatelessWidget {
                   child: Scaffold(
                     appBar: AppBar(
                       title: Text(title),
+                      // Show a close button when it's a modal, and nothing
+                      // when it's a card. Of course, you can also make this
+                      // configurable.
+                      actions: mode == ModalTemplateMode.centered
+                          ? <Widget>[
+                              IconButton(
+                                onPressed: () {
+                                  back(context);
+                                },
+                                icon: const Icon(Icons.close),
+                              ),
+                            ]
+                          : null,
                     ),
                     // In the case of rendering the content at the bottom of the
                     // page, this ensures that the card's content doesn't render
